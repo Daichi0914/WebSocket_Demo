@@ -1,0 +1,43 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: chat-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: chatdb
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    container_name: chat-redis
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: ./backend
+    container_name: chat-backend
+    ports:
+      - "8080:8080"
+    environment:
+      MYSQL_DSN: "root:root@tcp(mysql:3306)/chatdb?charset=utf8mb4&parseTime=True&loc=Local"
+      REDIS_ADDR: "redis:6379"
+    depends_on:
+      - mysql
+      - redis
+
+  frontend:
+    build: ./frontend
+    container_name: chat-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+      NEXT_PUBLIC_WS_URL: ws://localhost:8080/ws
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
