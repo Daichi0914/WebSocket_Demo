@@ -8,7 +8,7 @@ interface MessageInputProps {
 export function MessageInput({ disabled, onSend }: MessageInputProps) {
   const [inputValue, setInputValue] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!inputValue.trim() || disabled) return;
     

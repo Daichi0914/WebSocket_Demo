@@ -7,7 +7,7 @@ interface NamePromptProps {
 }
 
 export function NamePrompt({ senderName, setSenderName, onJoin }: NamePromptProps) {
-  const handleNameSubmit = (e: React.FormEvent) => {
+  const handleNameSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (senderName.trim()) {
       onJoin();
