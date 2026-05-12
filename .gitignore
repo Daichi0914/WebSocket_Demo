@@ -1,4 +1,5 @@
-.env
+.env.dev
 .env.e2e
+.env.stg
 .env.prod
 .DS_Store

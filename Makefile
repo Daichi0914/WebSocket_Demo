@@ -1,36 +1,36 @@
-.PHONY: up down build logs ps restart clean e2e-up e2e-down test-backend test-integration test-frontend test-e2e
+.PHONY: up down build rebuild logs ps restart clean e2e-up e2e-down test-backend test-integration test-frontend test-e2e stg-up stg-down stg-build prod-up prod-down prod-build
 
 # 起動 (バックグラウンド)
 up:
-	podman compose up -d
+	podman compose --env-file .env.dev up -d
 
 # 停止
 down:
-	podman compose down
+	podman compose --env-file .env.dev down
 
 # コンテナのビルド
 build:
-	podman compose build
+	podman compose --env-file .env.dev build
 
 # 再ビルドして起動
 rebuild:
-	podman compose up -d --build
+	podman compose --env-file .env.dev up -d --build
 
 # ログを表示
 logs:
-	podman compose logs -f
+	podman compose --env-file .env.dev logs -f
 
 # コンテナの状態を確認
 ps:
-	podman compose ps
+	podman compose --env-file .env.dev ps
 
 # 再起動
 restart:
-	podman compose restart
+	podman compose --env-file .env.dev restart
 
 # 停止してボリュームごと削除
 clean:
-	podman compose down -v
+	podman compose --env-file .env.dev down -v
 
 # --- Testing ---
 
@@ -72,6 +72,20 @@ e2e-up:
 # E2Eテスト用のバックエンド環境を停止・ボリュームごと削除
 e2e-down:
 	podman compose -p websocket-chat-e2e --env-file .env.e2e --profile e2e down -v
+# --- Staging Environment ---
+
+# ステージング環境の起動
+stg-up:
+	podman compose -p chat-stg -f compose.prod.yaml --env-file .env.stg up -d
+
+# ステージング環境の停止
+stg-down:
+	podman compose -p chat-stg -f compose.prod.yaml --env-file .env.stg down
+
+# ステージング環境のビルド
+stg-build:
+	podman compose -p chat-stg -f compose.prod.yaml --env-file .env.stg build
+
 # --- Production Environment ---
 
 # 本番環境の起動 (おうちサーバー向け)
@@ -84,4 +98,4 @@ prod-down:
 
 # 本番環境のビルド
 prod-build:
-	podman compose -f compose.prod.yaml --env-file .env.prod build
+	podman compose -p chat-prod -f compose.prod.yaml --env-file .env.prod build
