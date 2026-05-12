@@ -1,4 +1,4 @@
-.PHONY: up down build logs ps restart clean
+.PHONY: up down build logs ps restart clean e2e-up e2e-down test-backend test-integration test-frontend test-e2e
 
 # 起動 (バックグラウンド)
 up:
@@ -49,4 +49,26 @@ test-frontend:
 # E2Eテスト（Playwright）
 # ※バックエンドが起動している必要があります（make up）
 test-e2e:
-	cd frontend && npm run test:e2e
+	$(MAKE) e2e-up
+	@echo "Waiting for E2E backend to be ready..."
+	@for i in $$(seq 1 30); do \
+		if curl -s http://localhost:8081/api/messages > /dev/null 2>&1; then \
+			echo "E2E backend is ready!"; \
+			break; \
+		fi; \
+		echo "Waiting... ($$i/30)"; \
+		sleep 2; \
+		if [ $$i -eq 30 ]; then echo "Timeout waiting for E2E backend"; exit 1; fi; \
+	done
+	@cd frontend && E2E_ENV=true NEXT_PUBLIC_API_URL=http://localhost:8081 NEXT_PUBLIC_WS_URL=ws://localhost:8081/ws npm run test:e2e; \
+	EXIT_CODE=$$?; $(MAKE) -C .. e2e-down; exit $$EXIT_CODE
+
+# --- E2E Environment ---
+
+# E2Eテスト用のバックエンド環境を起動（開発環境と別ポートで起動）
+e2e-up:
+	podman compose -p websocket-chat-e2e --env-file .env.e2e --profile e2e up -d
+
+# E2Eテスト用のバックエンド環境を停止・ボリュームごと削除
+e2e-down:
+	podman compose -p websocket-chat-e2e --env-file .env.e2e --profile e2e down -v

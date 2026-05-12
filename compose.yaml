@@ -1,4 +1,5 @@
 services:
+  # --- Development Services (default) ---
   mysql:
     image: mysql:8.0
     container_name: chat-mysql
@@ -38,6 +39,38 @@ services:
       NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
     depends_on:
       - backend
+
+  # --- E2E Test Services (profile: e2e) ---
+  # 開発環境と別ポートで動作するため、make up と同時に起動しても干渉しない
+  mysql-e2e:
+    profiles: [e2e]
+    image: mysql:8.0
+    container_name: chat-mysql-e2e
+    environment:
+      MYSQL_ROOT_PASSWORD: ${E2E_MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${E2E_MYSQL_DATABASE}
+    ports:
+      - "3307:3306"
+
+  redis-e2e:
+    profiles: [e2e]
+    image: redis:7-alpine
+    container_name: chat-redis-e2e
+    ports:
+      - "6380:6379"
+
+  backend-e2e:
+    profiles: [e2e]
+    build: ./backend
+    container_name: chat-backend-e2e
+    ports:
+      - "8081:8080"
+    environment:
+      MYSQL_DSN: ${E2E_MYSQL_DSN}
+      REDIS_ADDR: ${E2E_REDIS_ADDR}
+    depends_on:
+      - mysql-e2e
+      - redis-e2e
 
 volumes:
   mysql_data:

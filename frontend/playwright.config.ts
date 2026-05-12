@@ -17,7 +17,7 @@ export default defineConfig({
   reporter: 'html',
   /* Shared settings for all the projects below. */
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:3001',
     /* Collect trace when retrying the failed test. */
     trace: 'on-first-retry',
   },
@@ -32,9 +32,16 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    command: 'PORT=3001 npm run dev',
+    url: 'http://localhost:3001',
+    // E2E環境フラグがある場合は、既存サーバーを無視して強制的に再起動する（環境変数の確実な反映のため）
+    reuseExistingServer: !process.env.CI && !process.env.E2E_ENV,
     timeout: 120 * 1000,
+    // NEXT_PUBLIC_* 変数をフロントエンドの開発サーバーに注入する
+    // make test-e2e 実行時は localhost:8081（E2E用バックエンド）を指す
+    env: {
+      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080',
+      NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:8080/ws',
+    },
   },
 });
