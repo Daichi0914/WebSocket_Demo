@@ -30,13 +30,15 @@ services:
       - redis
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      target: dev
     container_name: chat-frontend
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-}
     depends_on:
       - backend
 

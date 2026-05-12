@@ -72,3 +72,16 @@ e2e-up:
 # E2Eテスト用のバックエンド環境を停止・ボリュームごと削除
 e2e-down:
 	podman compose -p websocket-chat-e2e --env-file .env.e2e --profile e2e down -v
+# --- Production Environment ---
+
+# 本番環境の起動 (おうちサーバー向け)
+prod-up:
+	podman compose -p chat-prod -f compose.prod.yaml --env-file .env.prod up -d
+
+# 本番環境の停止
+prod-down:
+	podman compose -p chat-prod -f compose.prod.yaml --env-file .env.prod down
+
+# 本番環境のビルド
+prod-build:
+	podman compose -f compose.prod.yaml --env-file .env.prod build

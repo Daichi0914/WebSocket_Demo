@@ -1,3 +1,4 @@
 .env
 .env.e2e
+.env.prod
 .DS_Store
