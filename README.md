@@ -49,6 +49,37 @@ make ps
 make clean
 ```
 
+## 環境変数の設定
+
+セキュリティのため、本番用の設定値は `.env` ファイルで管理し、Git の管理対象外としています。
+ローカルで起動する際は、`.env.example` をコピーして `.env` を作成してください。
+
+```bash
+cp .env.example .env
+```
+
+## テスト戦略
+
+本プロジェクトでは、品質担保のために「テストピラミッド」に基づいた4種類のテストを実装し、GitHub Actions で自動実行しています。
+
+### 1. 単体テスト (Unit Test)
+- **Backend**: Go の標準 `testing` パッケージと `testify` を使用。ロジックをモック化して高速に検証します。
+- **Frontend**: `Vitest` と `React Testing Library` を使用。コンポーネントの表示や挙動を検証します。
+- **実行**: `make test-backend`, `make test-frontend`
+
+### 2. 結合テスト (Integration Test)
+- **Backend**: `testcontainers-go` を使用。テスト実行時に自動で MySQL コンテナを立ち上げ、実際の DB 操作（GORM）が正しく動作するかを検証します。
+- **実行**: `make test-integration`
+
+### 3. E2Eテスト (End-to-End Test)
+- **Frontend**: `Playwright` を使用。ブラウザを2つ同時に立ち上げ、「Aliceが送信したメッセージがBobの画面にリアルタイムで届くか」というサービス全体の振る舞いを検証します。
+- **実行**: `make test-e2e` （※事前に `make up` が必要です）
+
+### CI (Continuous Integration)
+GitHub にプッシュされるたびに、上記すべてのテストが GitHub Actions 上で並列実行されます。
+
+---
+
 ## メッセージの流れ（内部動作）
 
 1. ユーザーがフロントエンド（Next.js）で名前を入力し、バックエンド（Go）とWebSocket接続を確立。

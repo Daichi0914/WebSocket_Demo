@@ -31,3 +31,22 @@ restart:
 # 停止してボリュームごと削除
 clean:
 	podman compose down -v
+
+# --- Testing ---
+
+# バックエンドの単体テスト
+test-backend:
+	cd backend && go test -v ./...
+
+# バックエンドの結合テスト（DBコンテナを使用）
+test-integration:
+	cd backend && go test -v -tags=integration ./...
+
+# フロントエンドの単体テスト
+test-frontend:
+	cd frontend && npm run test
+
+# E2Eテスト（Playwright）
+# ※バックエンドが起動している必要があります（make up）
+test-e2e:
+	cd frontend && npm run test:e2e
