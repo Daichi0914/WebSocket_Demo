@@ -1,0 +1,57 @@
+name: CD (Deploy to Home Server)
+
+on:
+  # 【1】CIのテストが成功した後に自動実行させるトリガー
+  workflow_run:
+    workflows: ["CI Workflow"]
+    branches: ["main"]
+    types: [completed]
+
+  # 【2】GitHubの画面から手動で環境を選んで実行させるトリガー
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: 'デプロイ先の環境を選択してください'
+        required: true
+        type: choice
+        options:
+          - stg
+          - prod
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    # CIが「成功」した時、または「手動実行」の時のみ動かす（CI失敗時は止める）
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    
+    # 手動なら選んだ環境、CIからの自動実行なら強制的に 'stg' を指定する
+    environment: ${{ inputs.target_env || 'stg' }}
+    
+    env:
+      # 以降のステップで使い回すための変数
+      TARGET_ENV: ${{ inputs.target_env || 'stg' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create environment files
+        run: |
+          cat << EOF > .env
+          APP_ENV=${{ env.TARGET_ENV }}
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+          MYSQL_DSN=${{ secrets.MYSQL_DSN }}
+          REDIS_ADDR=redis:6379
+          NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_WS_URL=${{ vars.NEXT_PUBLIC_WS_URL }}
+          EOF
+          cp .env .env.${{ env.TARGET_ENV }}
+
+      - name: Deploy with Podman Compose
+        run: |
+          podman-compose -p chat-${{ env.TARGET_ENV }} -f compose.${{ env.TARGET_ENV }}.yaml up -d --build
+
+      - name: Cleanup old images
+        run: |
+          podman image prune -f
