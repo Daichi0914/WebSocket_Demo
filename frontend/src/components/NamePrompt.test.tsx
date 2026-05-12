@@ -44,4 +44,25 @@ describe('NamePrompt Component', () => {
     // Then: onJoinイベントが発火すること
     expect(mockOnJoin).toHaveBeenCalledTimes(1);
   });
+
+  it('正常系: 入力フィールドに文字を入力した際にsetSenderNameが呼ばれること', () => {
+    // Given
+    const mockSetSenderName = vi.fn();
+    const mockOnJoin = vi.fn();
+    
+    render(
+      <NamePrompt 
+        senderName="" 
+        setSenderName={mockSetSenderName} 
+        onJoin={mockOnJoin} 
+      />
+    );
+
+    // When: 入力フィールドに文字を入力する
+    const input = screen.getByPlaceholderText(/your name/i);
+    fireEvent.change(input, { target: { value: 'Bob' } });
+
+    // Then: setSenderNameが入力した値で呼ばれること
+    expect(mockSetSenderName).toHaveBeenCalledWith('Bob');
+  });
 });

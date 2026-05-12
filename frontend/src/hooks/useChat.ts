@@ -31,8 +31,12 @@ export function useChat(isNameSet: boolean, senderName: string) {
     };
 
     socket.onmessage = (event) => {
-      const msg: Message = JSON.parse(event.data);
-      setMessages(prev => [...prev, msg]);
+      try {
+        const msg: Message = JSON.parse(event.data);
+        setMessages(prev => [...prev, msg]);
+      } catch (err) {
+        console.error("Failed to parse message:", err);
+      }
     };
 
     socket.onclose = () => {
