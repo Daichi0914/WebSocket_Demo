@@ -114,13 +114,13 @@ jobs:
 
       - name: Start backend services with Docker Compose
         run: |
-          cp .env.example .env
-          sed -i 's|MYSQL_ROOT_PASSWORD=.*|MYSQL_ROOT_PASSWORD=ci_test_password|' .env
-          sed -i 's|MYSQL_DSN=.*|MYSQL_DSN=root:ci_test_password@tcp(mysql:3306)/chatdb?parseTime=true\&loc=Local|' .env
-          sed -i 's|REDIS_ADDR=.*|REDIS_ADDR=redis:6379|' .env
-          sed -i 's|NEXT_PUBLIC_API_URL=.*|NEXT_PUBLIC_API_URL=http://localhost:8080|' .env
-          sed -i 's|NEXT_PUBLIC_WS_URL=.*|NEXT_PUBLIC_WS_URL=ws://localhost:8080/ws|' .env
-          docker compose up -d mysql redis backend
+          cp .env.dev.example .env.dev
+          sed -i 's|MYSQL_ROOT_PASSWORD=.*|MYSQL_ROOT_PASSWORD=ci_test_password|' .env.dev
+          sed -i 's|MYSQL_DSN=.*|MYSQL_DSN=root:ci_test_password@tcp(mysql:3306)/chatdb?parseTime=true\&loc=Local|' .env.dev
+          sed -i 's|REDIS_ADDR=.*|REDIS_ADDR=redis:6379|' .env.dev
+          sed -i 's|NEXT_PUBLIC_API_URL=.*|NEXT_PUBLIC_API_URL=http://localhost:8080|' .env.dev
+          sed -i 's|NEXT_PUBLIC_WS_URL=.*|NEXT_PUBLIC_WS_URL=ws://localhost:8080/ws|' .env.dev
+          docker compose --env-file .env.dev up -d mysql redis backend
           # バックエンドが起動するまで待機
           timeout 60 bash -c 'until curl -s http://localhost:8080/api/messages > /dev/null 2>&1; do sleep 2; done'
 
