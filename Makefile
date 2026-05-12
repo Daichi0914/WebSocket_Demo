@@ -76,15 +76,15 @@ e2e-down:
 
 # ステージング環境の起動
 stg-up:
-	podman compose -p chat-stg -f compose.prod.yaml --env-file .env.stg up -d
+	podman compose -p chat-stg -f compose.stg.yaml --env-file .env.stg up -d
 
 # ステージング環境の停止
 stg-down:
-	podman compose -p chat-stg -f compose.prod.yaml --env-file .env.stg down
+	podman compose -p chat-stg -f compose.stg.yaml --env-file .env.stg down
 
 # ステージング環境のビルド
 stg-build:
-	podman compose -p chat-stg -f compose.prod.yaml --env-file .env.stg build
+	podman compose -p chat-stg -f compose.stg.yaml --env-file .env.stg build
 
 # --- Production Environment ---
 
