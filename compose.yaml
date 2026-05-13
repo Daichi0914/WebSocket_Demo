@@ -75,8 +75,45 @@ services:
       timeout: 5s
       retries: 5
 
+  # --- E2E Testing Services ---
+  mysql-e2e:
+    profiles: [e2e]
+    image: docker.io/library/mysql:8.0
+    container_name: chat-mysql-e2e
+    environment:
+      MYSQL_ROOT_PASSWORD: ${E2E_MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${E2E_MYSQL_DATABASE}
+    ports:
+      - "8082:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${E2E_MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis-e2e:
+    profiles: [e2e]
+    image: docker.io/library/redis:7-alpine
+    container_name: chat-redis-e2e
+    ports:
+      - "6380:6379"
+
+  backend-e2e:
+    profiles: [e2e]
+    build: ./backend
+    container_name: chat-backend-e2e
+    ports:
+      - "8081:8080"
+    environment:
+      MYSQL_DSN: ${E2E_MYSQL_DSN}
+      REDIS_ADDR: ${E2E_REDIS_ADDR}
+    depends_on:
+      mysql-e2e:
+        condition: service_healthy
+      redis-e2e:
+        condition: service_started
+
 volumes:
-  # 環境ごとにボリュームを分離
   chat_mysql_dev_data:
   chat_mysql_stg_data:
   chat_mysql_prod_data:
