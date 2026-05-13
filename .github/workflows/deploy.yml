@@ -68,6 +68,7 @@ jobs:
         run: |
           cd ~/projects/WebSocket_Demo
           export XDG_RUNTIME_DIR=/run/user/$(id -u)
+          podman-compose -p chat-${{ env.TARGET_ENV }} --env-file .env.${{ env.TARGET_ENV }} build --no-cache frontend
           systemctl --user daemon-reload
           systemctl --user restart chat-${{ env.TARGET_ENV }}.service
 
