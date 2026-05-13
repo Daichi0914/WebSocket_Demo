@@ -48,9 +48,10 @@ jobs:
           EOF
           cp .env .env.${{ env.TARGET_ENV }}
 
-      - name: Deploy with Podman Compose
+      - name: Deploy via Systemd
         run: |
-          podman-compose -p chat-${{ env.TARGET_ENV }} -f compose.${{ env.TARGET_ENV }}.yaml up -d --build
+          podman-compose -p chat-stg -f compose.stg.yaml build
+          systemctl --user restart chat-stg.service
 
       - name: Cleanup old images
         run: podman image prune -f
