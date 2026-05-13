@@ -1,53 +1,42 @@
 .PHONY: up down build rebuild logs ps restart clean e2e-up e2e-down test-backend test-integration test-frontend test-e2e stg-up stg-down stg-build prod-up prod-down prod-build
 
-# 起動 (バックグラウンド)
+# --- Development Environment ---
+
 up:
 	podman compose --env-file .env.dev up -d
 
-# 停止
 down:
 	podman compose --env-file .env.dev down
 
-# コンテナのビルド
 build:
 	podman compose --env-file .env.dev build
 
-# 再ビルドして起動
 rebuild:
 	podman compose --env-file .env.dev up -d --build
 
-# ログを表示
 logs:
 	podman compose --env-file .env.dev logs -f
 
-# コンテナの状態を確認
 ps:
 	podman compose --env-file .env.dev ps
 
-# 再起動
 restart:
 	podman compose --env-file .env.dev restart
 
-# 停止してボリュームごと削除
 clean:
 	podman compose --env-file .env.dev down -v
 
 # --- Testing ---
 
-# バックエンドの単体テスト
 test-backend:
 	cd backend && go test -v ./...
 
-# バックエンドの結合テスト（DBコンテナを使用）
 test-integration:
 	cd backend && go test -v -tags=integration ./...
 
-# フロントエンドの単体テスト
 test-frontend:
 	cd frontend && npm run test
 
-# E2Eテスト（Playwright）
-# ※バックエンドが起動している必要があります（make up）
 test-e2e:
 	$(MAKE) e2e-up
 	@echo "Waiting for E2E backend to be ready..."
@@ -65,37 +54,30 @@ test-e2e:
 
 # --- E2E Environment ---
 
-# E2Eテスト用のバックエンド環境を起動（開発環境と別ポートで起動）
 e2e-up:
 	podman compose -p websocket-chat-e2e --env-file .env.e2e --profile e2e up -d
 
-# E2Eテスト用のバックエンド環境を停止・ボリュームごと削除
 e2e-down:
 	podman compose -p websocket-chat-e2e --env-file .env.e2e --profile e2e down -v
+
 # --- Staging Environment ---
 
-# ステージング環境の起動
 stg-up:
-	podman compose -p chat-stg -f compose.stg.yaml --env-file .env.stg up -d
+	podman compose -p chat-stg --env-file .env.stg up -d
 
-# ステージング環境の停止
 stg-down:
-	podman compose -p chat-stg -f compose.stg.yaml --env-file .env.stg down
+	podman compose -p chat-stg --env-file .env.stg down
 
-# ステージング環境のビルド
 stg-build:
-	podman compose -p chat-stg -f compose.stg.yaml --env-file .env.stg build
+	podman compose -p chat-stg --env-file .env.stg build
 
 # --- Production Environment ---
 
-# 本番環境の起動 (おうちサーバー向け)
 prod-up:
-	podman compose -p chat-prod -f compose.prod.yaml --env-file .env.prod up -d
+	podman compose -p chat-prod --env-file .env.prod up -d
 
-# 本番環境の停止
 prod-down:
-	podman compose -p chat-prod -f compose.prod.yaml --env-file .env.prod down
+	podman compose -p chat-prod --env-file .env.prod down
 
-# 本番環境のビルド
 prod-build:
-	podman compose -p chat-prod -f compose.prod.yaml --env-file .env.prod build
+	podman compose -p chat-prod --env-file .env.prod build

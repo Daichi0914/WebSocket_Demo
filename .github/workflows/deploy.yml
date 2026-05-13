@@ -37,22 +37,29 @@ jobs:
 
       - name: Create environment files
         run: |
-          cat << EOF > .env
+          cat << EOF > .env.${{ env.TARGET_ENV }}
           APP_ENV=${{ env.TARGET_ENV }}
+          NODE_ENV=production
+          RESTART_POLICY=always
+          NGINX_PORT=${{ env.TARGET_ENV == 'prod' && '80' || '8080' }}
           MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
           MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER=${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
           MYSQL_DSN=${{ secrets.MYSQL_DSN }}
+          MYSQL_EXPOSE=127.0.0.1:3306
           REDIS_ADDR=redis:6379
+          REDIS_EXPOSE=127.0.0.1:6379
+          FRONTEND_TARGET=runner
           NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
           NEXT_PUBLIC_WS_URL=${{ vars.NEXT_PUBLIC_WS_URL }}
           EOF
-          cp .env .env.${{ env.TARGET_ENV }}
 
       - name: Deploy via Systemd
         run: |
           export XDG_RUNTIME_DIR=/run/user/$(id -u)
-          podman-compose -p chat-stg -f compose.stg.yaml build
-          systemctl --user restart chat-stg.service
+          podman-compose -p chat-${{ env.TARGET_ENV }} --env-file .env.${{ env.TARGET_ENV }} up -d --build
+          systemctl --user restart chat-${{ env.TARGET_ENV }}.service
 
       - name: Cleanup old images
         run: podman image prune -f
