@@ -20,8 +20,8 @@ FROM alpine:3.21
 
 WORKDIR /app
 
-# ヘルスチェック用のツールをインストール
-RUN apk add --no-cache ca-certificates wget
+# 証明書の更新（HTTPS通信用）
+RUN apk add --no-cache ca-certificates
 
 # セキュリティ: 非rootユーザーを作成して実行する
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
