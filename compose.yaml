@@ -70,6 +70,8 @@ services:
     restart: ${RESTART_POLICY:-no}
     ports:
       - "${REDIS_EXPOSE:-127.0.0.1:6379}:6379"
+    volumes:
+      - chat_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -117,4 +119,7 @@ services:
 volumes:
   chat_mysql_data:
     name: ${MYSQL_VOLUME_NAME}
+    external: true
+  chat_redis_data:
+    name: ${REDIS_VOLUME_NAME}
     external: true

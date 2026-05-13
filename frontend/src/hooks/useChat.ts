@@ -6,14 +6,14 @@ export function useChat(isNameSet: boolean, senderName: string) {
   const [isConnected, setIsConnected] = useState(false);
   const ws = useRef<WebSocket | null>(null);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
   const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws";
 
   useEffect(() => {
     if (!isNameSet) return;
 
     // Fetch history
-    fetch(`${API_URL}/api/messages`)
+    fetch(`${API_URL}/messages`)
       .then(res => res.json())
       .then(data => {
         if(Array.isArray(data)) {

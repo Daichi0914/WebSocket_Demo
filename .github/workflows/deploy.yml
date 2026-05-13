@@ -39,6 +39,7 @@ jobs:
           NODE_ENV=production
           RESTART_POLICY=always
           MYSQL_VOLUME_NAME=chat-${{ env.TARGET_ENV }}_chat_mysql_${{ env.TARGET_ENV }}_data
+          REDIS_VOLUME_NAME=chat-${{ env.TARGET_ENV }}_chat_redis_${{ env.TARGET_ENV }}_data
           NGINX_PORT=${{ env.TARGET_ENV == 'prod' && '80' || '8080' }}
           MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
           MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
@@ -58,9 +59,10 @@ jobs:
           mkdir -p ~/projects/WebSocket_Demo
           rsync -av --delete --exclude='.git' ./ ~/projects/WebSocket_Demo/
 
-      - name: Ensure External Volume Exists
+      - name: Ensure External Volumes Exist
         run: |
           podman volume create chat-${{ env.TARGET_ENV }}_chat_mysql_${{ env.TARGET_ENV }}_data || true
+          podman volume create chat-${{ env.TARGET_ENV }}_chat_redis_${{ env.TARGET_ENV }}_data || true
 
       - name: Deploy via Systemd
         run: |
