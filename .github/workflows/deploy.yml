@@ -53,5 +53,5 @@ jobs:
           podman-compose -p chat-${{ env.TARGET_ENV }} -f compose.${{ env.TARGET_ENV }}.yaml up -d --build
 
       - name: Cleanup old images
-        run: |
-          podman image prune -f
+        run: podman image prune -f
+        continue-on-error: true
