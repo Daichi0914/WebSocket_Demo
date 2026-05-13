@@ -21,14 +21,11 @@ on:
 jobs:
   deploy:
     runs-on: self-hosted
-    # CIが「成功」した時、または「手動実行」の時のみ動かす（CI失敗時は止める）
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     
-    # 手動なら選んだ環境、CIからの自動実行なら強制的に 'stg' を指定する
     environment: ${{ inputs.target_env || 'stg' }}
     
     env:
-      # 以降のステップで使い回すための変数
       TARGET_ENV: ${{ inputs.target_env || 'stg' }}
 
     steps:
@@ -55,10 +52,16 @@ jobs:
           NEXT_PUBLIC_WS_URL=${{ vars.NEXT_PUBLIC_WS_URL }}
           EOF
 
+      - name: Sync code to project directory
+        run: |
+          mkdir -p ~/projects/WebSocket_Demo
+          rsync -av --delete --exclude='.git' ./ ~/projects/WebSocket_Demo/
+
       - name: Deploy via Systemd
         run: |
+          cd ~/projects/WebSocket_Demo
           export XDG_RUNTIME_DIR=/run/user/$(id -u)
-          podman-compose -p chat-${{ env.TARGET_ENV }} --env-file .env.${{ env.TARGET_ENV }} up -d --build
+          systemctl --user daemon-reload
           systemctl --user restart chat-${{ env.TARGET_ENV }}.service
 
       - name: Cleanup old images
