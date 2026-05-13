@@ -55,7 +55,7 @@ services:
       # ホスト側ポート:コンテナ側ポート
       - "${MYSQL_EXPOSE:-127.0.0.1:3306}:3306"
     volumes:
-      - chat_mysql_${APP_ENV}_data:/var/lib/mysql
+      - chat_mysql_data:/var/lib/mysql
       - ./mysql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
@@ -115,6 +115,6 @@ services:
         condition: service_started
 
 volumes:
-  chat_mysql_dev_data:
-  chat_mysql_stg_data:
-  chat_mysql_prod_data:
+  chat_mysql_data:
+    name: ${MYSQL_VOLUME_NAME}
+    external: true

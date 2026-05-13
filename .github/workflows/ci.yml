@@ -116,10 +116,12 @@ jobs:
         run: |
           cp .env.dev.example .env.dev
           sed -i 's|APP_ENV=.*|APP_ENV=dev|' .env.dev
+          sed -i 's|MYSQL_VOLUME_NAME=.*|MYSQL_VOLUME_NAME=chat-dev_chat_mysql_dev_data|' .env.dev
           sed -i 's|MYSQL_ROOT_PASSWORD=.*|MYSQL_ROOT_PASSWORD=ci_test_password|' .env.dev
           sed -i 's|MYSQL_USER=.*|MYSQL_USER=chat_user|' .env.dev
           sed -i 's|MYSQL_PASSWORD=.*|MYSQL_PASSWORD=ci_test_password|' .env.dev
           sed -i 's|MYSQL_DSN=.*|MYSQL_DSN=chat_user:ci_test_password@tcp(mysql:3306)/chatdb?parseTime=true\&loc=Local|' .env.dev
+          docker volume create chat-dev_chat_mysql_dev_data || true
           docker compose --env-file .env.dev up -d --wait
 
       - name: Run E2E Tests
