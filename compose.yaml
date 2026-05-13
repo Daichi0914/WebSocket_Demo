@@ -52,6 +52,7 @@ services:
       MYSQL_USER: ${MYSQL_USER:-chat_user}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
+      # ホスト側ポート:コンテナ側ポート
       - "${MYSQL_EXPOSE:-127.0.0.1:3306}:3306"
     volumes:
       - chat_mysql_${APP_ENV}_data:/var/lib/mysql
@@ -81,12 +82,12 @@ services:
     image: docker.io/library/mysql:8.0
     container_name: chat-mysql-e2e
     environment:
-      MYSQL_ROOT_PASSWORD: ${E2E_MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${E2E_MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${E2E_MYSQL_ROOT_PASSWORD:-e2e_pass}
+      MYSQL_DATABASE: ${E2E_MYSQL_DATABASE:-chatdb_e2e}
     ports:
       - "8082:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${E2E_MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${E2E_MYSQL_ROOT_PASSWORD:-e2e_pass}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -105,8 +106,8 @@ services:
     ports:
       - "8081:8080"
     environment:
-      MYSQL_DSN: ${E2E_MYSQL_DSN}
-      REDIS_ADDR: ${E2E_REDIS_ADDR}
+      MYSQL_DSN: ${E2E_MYSQL_DSN:-}
+      REDIS_ADDR: ${E2E_REDIS_ADDR:-redis-e2e:6379}
     depends_on:
       mysql-e2e:
         condition: service_healthy
