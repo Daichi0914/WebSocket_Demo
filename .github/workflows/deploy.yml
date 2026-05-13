@@ -50,6 +50,7 @@ jobs:
 
       - name: Deploy via Systemd
         run: |
+          export XDG_RUNTIME_DIR=/run/user/$(id -u)
           podman-compose -p chat-stg -f compose.stg.yaml build
           systemctl --user restart chat-stg.service
 
