@@ -138,6 +138,7 @@ jobs:
           
           wait
           
+          touch ./.htpasswd
           docker volume create chat-dev_chat_mysql_dev_data || true
           docker volume create chat-dev_chat_redis_dev_data || true
           docker compose --env-file .env.dev up -d --wait

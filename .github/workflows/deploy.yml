@@ -116,8 +116,13 @@ jobs:
           MYSQL_EXPOSE=${{ env.TARGET_ENV == 'prod' && '127.0.0.1:3306' || '127.0.0.1:3307' }}
           REDIS_ADDR=redis:6379
           REDIS_EXPOSE=${{ env.TARGET_ENV == 'prod' && '127.0.0.1:6379' || '127.0.0.1:6380' }}
-          # フロントエンドの環境変数はビルド時に埋め込まれているため不要
+          AUTH_BASIC_STATE=${{ env.TARGET_ENV == 'stg' && 'Restricted' || 'off' }}
           EOF
+          
+          touch ./.htpasswd
+          if [ "${{ env.TARGET_ENV }}" = "stg" ]; then
+            podman run --rm docker.io/library/httpd:alpine htpasswd -bn ${{ secrets.BASIC_AUTH_USER }} ${{ secrets.BASIC_AUTH_PASS }} > ./.htpasswd
+          fi
 
       - name: Ensure External Volumes Exist
         run: |
