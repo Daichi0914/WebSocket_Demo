@@ -1,13 +1,11 @@
 name: CD (Deploy to Home Server)
 
 on:
-  # 【1】CIのテストが成功した後に自動実行させるトリガー
   workflow_run:
     workflows: ["CI Workflow"]
     branches: ["main"]
     types: [completed]
 
-  # 【2】GitHubの画面から手動で環境を選んで実行させるトリガー
   workflow_dispatch:
     inputs:
       target_env:
@@ -18,26 +16,91 @@ on:
           - stg
           - prod
 
+env:
+  REGISTRY: ghcr.io
+  # リポジトリ名を小文字に変換して環境変数に格納
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Lowercase repository name
+        run: echo "GHCR_REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
+      - name: Build and push Frontend
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }} \
+            --build-arg NEXT_PUBLIC_WS_URL=${{ vars.NEXT_PUBLIC_WS_URL }} \
+            --target runner \
+            -t ${{ env.REGISTRY }}/${{ env.GHCR_REPO }}/frontend:latest \
+            ./frontend
+          docker push ${{ env.REGISTRY }}/${{ env.GHCR_REPO }}/frontend:latest
+
+      - name: Build and push Backend
+        run: |
+          docker build -t ${{ env.REGISTRY }}/${{ env.GHCR_REPO }}/backend:latest ./backend
+          docker push ${{ env.REGISTRY }}/${{ env.GHCR_REPO }}/backend:latest
+
+      - name: Build and push Nginx
+        run: |
+          docker build -t ${{ env.REGISTRY }}/${{ env.GHCR_REPO }}/nginx:latest ./nginx
+          docker push ${{ env.REGISTRY }}/${{ env.GHCR_REPO }}/nginx:latest
+
+      - name: Build and push MySQL
+        run: |
+          docker build -t ${{ env.REGISTRY }}/${{ env.GHCR_REPO }}/mysql:latest ./mysql
+          docker push ${{ env.REGISTRY }}/${{ env.GHCR_REPO }}/mysql:latest
+
+      - name: Upload compose.yaml for deploy job
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-file
+          path: compose.yaml
+
   deploy:
     runs-on: self-hosted
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-    
+    needs: build-and-push
     environment: ${{ inputs.target_env || 'stg' }}
     
     env:
       TARGET_ENV: ${{ inputs.target_env || 'stg' }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # --- ソースコードをチェックアウトせず、compose.yaml のみを取得 ---
+      - name: Download compose.yaml
+        uses: actions/download-artifact@v4
+        with:
+          name: compose-file
+          path: ~/projects/WebSocket_Demo
+
+      - name: Lowercase repository name
+        run: echo "GHCR_REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Create environment files
         run: |
+          cd ~/projects/WebSocket_Demo
           cat << EOF > .env.${{ env.TARGET_ENV }}
           APP_ENV=${{ env.TARGET_ENV }}
           NODE_ENV=production
           RESTART_POLICY=always
+          GHCR_REPO=${{ env.GHCR_REPO }}
           MYSQL_VOLUME_NAME=chat-${{ env.TARGET_ENV }}_chat_mysql_${{ env.TARGET_ENV }}_data
           REDIS_VOLUME_NAME=chat-${{ env.TARGET_ENV }}_chat_redis_${{ env.TARGET_ENV }}_data
           NGINX_PORT=${{ env.TARGET_ENV == 'prod' && '80' || '8080' }}
@@ -49,29 +112,29 @@ jobs:
           MYSQL_EXPOSE=127.0.0.1:3306
           REDIS_ADDR=redis:6379
           REDIS_EXPOSE=127.0.0.1:6379
-          FRONTEND_TARGET=runner
-          NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
-          NEXT_PUBLIC_WS_URL=${{ vars.NEXT_PUBLIC_WS_URL }}
+          # フロントエンドの環境変数はビルド時に埋め込まれているため不要
           EOF
-
-      - name: Sync code to project directory
-        run: |
-          mkdir -p ~/projects/WebSocket_Demo
-          rsync -av --delete --exclude='.git' ./ ~/projects/WebSocket_Demo/
 
       - name: Ensure External Volumes Exist
         run: |
           podman volume create chat-${{ env.TARGET_ENV }}_chat_mysql_${{ env.TARGET_ENV }}_data || true
           podman volume create chat-${{ env.TARGET_ENV }}_chat_redis_${{ env.TARGET_ENV }}_data || true
 
+      - name: Log in to GHCR via Podman
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+
       - name: Deploy via Systemd
         run: |
           cd ~/projects/WebSocket_Demo
           export XDG_RUNTIME_DIR=/run/user/$(id -u)
-          podman-compose -p chat-${{ env.TARGET_ENV }} --env-file .env.${{ env.TARGET_ENV }} build --no-cache frontend
+          
+          # GHCRから最新イメージを明示的に取得
+          podman-compose -p chat-${{ env.TARGET_ENV }} --env-file .env.${{ env.TARGET_ENV }} pull
+          
           systemctl --user daemon-reload
           systemctl --user restart chat-${{ env.TARGET_ENV }}.service
 
       - name: Cleanup old images
-        run: podman image prune -f
+        run: podman image prune -af --filter "until=24h"
         continue-on-error: true
