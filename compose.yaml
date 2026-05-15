@@ -14,8 +14,7 @@ services:
       - ./.htpasswd:/etc/nginx/.htpasswd:ro
 
   cloudflared:
-    profiles: [tunnel]
-    image: cloudflare/cloudflared:latest
+    image: docker.io/cloudflare/cloudflared:latest
     container_name: chat-cloudflared-${APP_ENV}
     restart: ${RESTART_POLICY:-no}
     command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}

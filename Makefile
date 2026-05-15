@@ -3,7 +3,7 @@
 # --- Development Environment ---
 
 up:
-	podman compose up -d
+	podman compose up -d --scale cloudflared=0
 
 down:
 	podman compose down
@@ -12,7 +12,7 @@ build:
 	podman compose build
 
 rebuild:
-	podman compose up -d --build
+	podman compose up -d --build --scale cloudflared=0
 
 logs:
 	podman compose logs -f

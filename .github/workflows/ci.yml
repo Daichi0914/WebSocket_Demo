@@ -141,7 +141,7 @@ jobs:
           touch ./.htpasswd
           docker volume create chat-dev_chat_mysql_dev_data || true
           docker volume create chat-dev_chat_redis_dev_data || true
-          docker compose up -d --wait
+          docker compose up -d --wait --scale cloudflared=0
 
       - name: Run E2E Tests
         working-directory: frontend
