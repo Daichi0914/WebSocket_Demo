@@ -3,7 +3,11 @@
 # --- Development Environment ---
 
 up:
+	touch ./.htpasswd
+	podman volume create chat-dev_chat_mysql_dev_data || true
+	podman volume create chat-dev_chat_redis_dev_data || true
 	podman compose up -d --scale cloudflared=0
+	rm -f ./.htpasswd
 
 down:
 	podman compose down
@@ -12,7 +16,11 @@ build:
 	podman compose build
 
 rebuild:
+	touch ./.htpasswd
+	podman volume create chat-dev_chat_mysql_dev_data || true
+	podman volume create chat-dev_chat_redis_dev_data || true
 	podman compose up -d --build --scale cloudflared=0
+	rm -f ./.htpasswd
 
 logs:
 	podman compose logs -f

@@ -1,6 +1,8 @@
 services:
   nginx:
     image: ghcr.io/${GHCR_REPO}/nginx:${APP_ENV}
+    build:
+      context: ./nginx
     container_name: chat-nginx-${APP_ENV}
     ports:
       - '${NGINX_PORT:-8080}:80'
@@ -23,6 +25,12 @@ services:
 
   frontend:
     image: ghcr.io/${GHCR_REPO}/frontend:${APP_ENV}
+    build:
+      context: ./frontend
+      target: ${FRONTEND_TARGET:-dev}
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
     container_name: chat-frontend-${APP_ENV}
     restart: ${RESTART_POLICY:-no}
     environment:
@@ -30,6 +38,8 @@ services:
 
   backend:
     image: ghcr.io/${GHCR_REPO}/backend:${APP_ENV}
+    build:
+      context: ./backend
     container_name: chat-backend-${APP_ENV}
     restart: ${RESTART_POLICY:-no}
     environment:
@@ -49,6 +59,8 @@ services:
 
   mysql:
     image: ghcr.io/${GHCR_REPO}/mysql:${APP_ENV}
+    build:
+      context: ./mysql
     container_name: chat-mysql-${APP_ENV}
     restart: ${RESTART_POLICY:-no}
     environment:
