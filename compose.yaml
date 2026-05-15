@@ -13,6 +13,15 @@ services:
     volumes:
       - ./.htpasswd:/etc/nginx/.htpasswd:ro
 
+  cloudflared:
+    profiles: [tunnel]
+    image: cloudflare/cloudflared:latest
+    container_name: chat-cloudflared-${APP_ENV}
+    restart: ${RESTART_POLICY:-no}
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - nginx
+
   frontend:
     image: ghcr.io/${GHCR_REPO}/frontend:${APP_ENV}
     container_name: chat-frontend-${APP_ENV}

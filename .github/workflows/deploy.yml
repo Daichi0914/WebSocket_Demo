@@ -117,6 +117,8 @@ jobs:
           REDIS_ADDR=redis:6379
           REDIS_EXPOSE=${{ env.TARGET_ENV == 'prod' && '127.0.0.1:6379' || '127.0.0.1:6380' }}
           AUTH_BASIC_STATE=${{ env.TARGET_ENV == 'stg' && 'Restricted' || 'off' }}
+          CLOUDFLARE_TUNNEL_TOKEN=${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
+          COMPOSE_PROFILES=tunnel
           EOF
           
           touch ./.htpasswd
