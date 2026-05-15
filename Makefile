@@ -3,28 +3,28 @@
 # --- Development Environment ---
 
 up:
-	podman compose --env-file .env.dev up -d
+	podman compose up -d
 
 down:
-	podman compose --env-file .env.dev down
+	podman compose down
 
 build:
-	podman compose --env-file .env.dev build
+	podman compose build
 
 rebuild:
-	podman compose --env-file .env.dev up -d --build
+	podman compose up -d --build
 
 logs:
-	podman compose --env-file .env.dev logs -f
+	podman compose logs -f
 
 ps:
-	podman compose --env-file .env.dev ps
+	podman compose ps
 
 restart:
-	podman compose --env-file .env.dev restart
+	podman compose restart
 
 clean:
-	podman compose --env-file .env.dev down -v
+	podman compose down -v
 
 # --- Testing ---
 
@@ -60,24 +60,3 @@ e2e-up:
 e2e-down:
 	podman compose -p websocket-chat-e2e --env-file .env.e2e --profile e2e down -v
 
-# --- Staging Environment ---
-
-stg-up:
-	podman compose -p chat-stg --env-file .env.stg up -d
-
-stg-down:
-	podman compose -p chat-stg --env-file .env.stg down
-
-stg-build:
-	podman compose -p chat-stg --env-file .env.stg build
-
-# --- Production Environment ---
-
-prod-up:
-	podman compose -p chat-prod --env-file .env.prod up -d
-
-prod-down:
-	podman compose -p chat-prod --env-file .env.prod down
-
-prod-build:
-	podman compose -p chat-prod --env-file .env.prod build
