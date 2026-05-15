@@ -18,8 +18,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  # リポジトリ名を小文字に変換して環境変数に格納
   IMAGE_NAME: ${{ github.repository }}
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build-and-push:
