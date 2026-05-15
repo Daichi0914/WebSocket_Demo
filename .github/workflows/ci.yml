@@ -130,10 +130,13 @@ jobs:
           docker build --target dev \
             --build-arg NEXT_PUBLIC_API_URL=http://localhost:8080/api \
             --build-arg NEXT_PUBLIC_WS_URL=ws://localhost:8080/ws \
-            -t ghcr.io/${GHCR_REPO}/frontend:dev ./frontend
-          docker build -t ghcr.io/${GHCR_REPO}/backend:dev ./backend
-          docker build -t ghcr.io/${GHCR_REPO}/nginx:dev ./nginx
-          docker build -t ghcr.io/${GHCR_REPO}/mysql:dev ./mysql
+            -t ghcr.io/${GHCR_REPO}/frontend:dev ./frontend &
+          
+          docker build -t ghcr.io/${GHCR_REPO}/backend:dev ./backend &
+          docker build -t ghcr.io/${GHCR_REPO}/nginx:dev ./nginx &
+          docker build -t ghcr.io/${GHCR_REPO}/mysql:dev ./mysql &
+          
+          wait
           
           docker volume create chat-dev_chat_mysql_dev_data || true
           docker volume create chat-dev_chat_redis_dev_data || true
